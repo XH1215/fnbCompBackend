@@ -1,4 +1,6 @@
-﻿namespace orderAPI.Models
+﻿using System;
+
+namespace orderAPI.Models
 {
     public class NotificationLog
     {
@@ -9,6 +11,4 @@
         public DateTime SentAt { get; set; }
         public string Status { get; set; } // Enum: Sent, Failed
     }
-
-
 }

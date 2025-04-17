@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using orderAPI.Data; // This should match your namespace for AppDbContext
+using orderAPI.Repositories;
+using orderAPI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,22 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Register Repositories
+builder.Services.AddScoped<IOutletRepository, OutletRepository>();
+builder.Services.AddScoped<IStaffRepository, StaffRepository>();
+//builder.Services.AddScoped<IQueueRepository, QueueRepository>();
+//builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+builder.Services.AddScoped<IBanRepository, BanRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+
+// Register Services
+builder.Services.AddScoped<IOutletService, OutletService>();
+builder.Services.AddScoped<IStaffService, StaffService>();
+//builder.Services.AddScoped<IQueueService, QueueService>();
+//builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IBanService, BanService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 var app = builder.Build();
 
