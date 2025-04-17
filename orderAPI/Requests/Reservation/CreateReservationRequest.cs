@@ -1,4 +1,6 @@
-﻿namespace orderAPI.Request.Reservation
+﻿using System;
+
+namespace orderAPI.Requests.Reservation
 {
     public class CreateReservationRequest
     {

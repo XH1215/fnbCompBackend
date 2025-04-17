@@ -1,4 +1,4 @@
-﻿namespace orderAPI.Request.Reservation
+﻿namespace orderAPI.Requests.Reservation
 {
     public class GetReservationsByContactRequest
     {

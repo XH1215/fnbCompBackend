@@ -1,15 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using orderAPI.Request.Queue;
+using orderAPI.Requests.Queue;
+using orderAPI.Results.Queue;
 using System.Threading.Tasks;
-using orderAPI.Models;
 
 namespace orderAPI.Services
 {
     public interface IQueueService
     {
-        Task<Queue> JoinQueueAsync(string contactNumber, int outletId, int numberOfGuests, string? specialRequests);
-        Task<Queue?> GetQueueStatusAsync(string contactNumber, int outletId);
-        Task<bool> CancelQueueAsync(int queueId);
-        Task<List<Queue>> GetAllWaitingQueueEntriesAsync(int outletId);
-        Task<bool> NotifyNextCustomerAsync(int outletId);
+        Task<JoinQueueResult> JoinQueueAsync(QueueCreateRequest req);
+        Task<GetQueueStatusResult> GetQueueStatusAsync(QueueStatusRequest req);
+        Task<CancelQueueResult> CancelQueueAsync(QueueCancelRequest req);
+        Task<GetAllWaitingQueueEntriesResult> GetAllWaitingQueueEntriesAsync(AllWaitingQueueRequest req);
+        Task<NotifyNextCustomerResult> NotifyNextCustomerAsync(NotifyNextCustomerRequest req);
     }
 }

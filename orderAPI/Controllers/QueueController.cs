@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using orderAPI.Requests.Queue;
 using orderAPI.Results.Queue;
 using orderAPI.Services;
-using orderAPI.Request.Queue;
 
 namespace orderAPI.Controllers
 {

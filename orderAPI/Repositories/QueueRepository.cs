@@ -22,7 +22,7 @@ namespace orderAPI.Repositories
             await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
             // 锁定当前 outlet 下所有 Waiting 的记录
-            var waiting = await _context.Queue
+            var waiting = await _context.Queues
                 .FromSqlInterpolated($@"
                     SELECT * FROM `Queue`
                     WHERE outlet_id = {outletId}
@@ -42,7 +42,7 @@ namespace orderAPI.Repositories
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.Queue.Add(entry);
+            _context.Queues.Add(entry);
             await _context.SaveChangesAsync();
             await tx.CommitAsync();
 
@@ -54,7 +54,7 @@ namespace orderAPI.Repositories
             await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
             // 锁定指定队列记录
-            var entry = await _context.Queue
+            var entry = await _context.Queues
                 .FromSqlInterpolated($@"
                     SELECT * FROM `Queue`
                     WHERE id = {queueId}
@@ -99,7 +99,7 @@ namespace orderAPI.Repositories
         public async Task<List<Queue>> GetAllWaitingQueueEntriesAsync(int outletId)
         {
             // 纯查询，无需锁
-            return await _context.Queue
+            return await _context.Queues
                 .Where(q => q.OutletId == outletId && q.Status == "Waiting")
                 .OrderBy(q => q.QueuePosition)
                 .ToListAsync();

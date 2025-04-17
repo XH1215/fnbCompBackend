@@ -1,4 +1,4 @@
-namespace orderAPI.Request.Queue
+namespace orderAPI.Requests.Queue
 {
     public class NotifyNextCustomerRequest
     {
