@@ -1,4 +1,4 @@
-﻿namespace OrderAPI.Request.Reservation
+﻿namespace orderAPI.Request.Reservation
 {
     public class UpdateReservationRequest
     {
