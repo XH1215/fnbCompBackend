@@ -21,7 +21,7 @@ public class WhatsAppService : IWhatsAppService
     {
         var token = _configuration["WhatsApp:AccessToken"];
         var phoneNumberId = _configuration["WhatsApp:PhoneNumberId"];
-        var url = $"https://graph.facebook.com/v17.0/{phoneNumberId}/messages";
+        var url = $"https://graph.facebook.com/v22.0/{phoneNumberId}/messages";
 
         var payload = new
         {
