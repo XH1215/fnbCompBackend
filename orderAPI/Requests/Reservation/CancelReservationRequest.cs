@@ -1,10 +1,7 @@
-namespace OrderAPI.Request.Reservation
+namespace orderAPI.Request.Reservation
 {
     public class CancelReservationRequest
     {
-        /// <summary>
-        /// ???????
-        /// </summary>
         public int ReservationId { get; set; }
     }
 }

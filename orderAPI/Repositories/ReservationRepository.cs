@@ -1,122 +1,129 @@
-﻿//using orderAPI.Data;
-//using orderAPI.Models;
-//using Microsoft.EntityFrameworkCore;
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Threading.Tasks;
+﻿// Repositories/ReservationRepository.cs
+using Microsoft.EntityFrameworkCore;
+using orderAPI.Data;
+using orderAPI.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Data;
 
-//namespace orderAPI.Repositories
-//{
-//    public class ReservationRepository : IReservationRepository
-//    {
-//        private readonly AppDbContext _context;
+namespace orderAPI.Repositories
+{
+    public class ReservationRepository : IReservationRepository
+    {
+        private readonly AppDbContext _context;
 
-//        public ReservationRepository(AppDbContext context)
-//        {
-//            _context = context;
-//        }
+        public ReservationRepository(AppDbContext context)
+        {
+            _context = context;
+        }
 
-//        /// <summary>
-//        /// 创建预订，同时对 outlet 下的预订记录加锁（悲观锁）以确保数据一致性。
-//        /// </summary>
-//        public async Task<Reservation> CreateReservationAsync(string contactNumber, int outletId, DateTime date, TimeSpan time, int guests, string? specialRequests)
-//        {
-//            using var transaction = await _context.Database.BeginTransactionAsync();
+        public async Task<Reservation> CreateReservationAsync(
+            string contactNumber,
+            int outletId,
+            DateTime date,
+            TimeSpan time,
+            int guests,
+            string? specialRequests)
+        {
+            await using var tx = await _context.Database
+                .BeginTransactionAsync(IsolationLevel.RepeatableRead);
 
-//            // 锁定当前 outlet 下的所有预订记录
-//            var lockedReservations = await _context.Reservations
-//                .FromSqlInterpolated($@"
-//                    SELECT * FROM Reservations 
-//                    WHERE outlet_id = {outletId}
-//                    FOR UPDATE")
-//                .ToListAsync();
+            // 悲观锁：锁定该 outlet 下所有记录
+            await _context.Reservations
+                .FromSqlInterpolated($@"
+                    SELECT * 
+                      FROM `Reservations`
+                     WHERE outlet_id = {outletId}
+                     FOR UPDATE")
+                .ToListAsync();
 
-//            var reservation = new Reservation
-//            {
-//                contact_number = contactNumber,
-//                outlet_id = outletId,
-//                reservation_date = date.Date,
-//                reservation_time = time,
-//                number_of_guests = guests,
-//                special_requests = specialRequests,
-//                status = "Pending",
-//                created_at = DateTime.UtcNow
-//            };
+            var reservation = new Reservation
+            {
+                ContactNumber = contactNumber,
+                OutletId = outletId,
+                ReservationDate = date.Date,
+                ReservationTime = time,
+                NumberOfGuests = guests,
+                SpecialRequests = specialRequests,
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow
+            };
 
-//            _context.Reservations.Add(reservation);
-//            await _context.SaveChangesAsync();
-//            await transaction.CommitAsync();
+            _context.Reservations.Add(reservation);
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+            return reservation;
+        }
 
-//            return reservation;
-//        }
+        public async Task<List<Reservation>> GetReservationsByContactAsync(string contactNumber)
+        {
+            return await _context.Reservations
+                .Where(r => r.ContactNumber == contactNumber)
+                .OrderByDescending(r => r.ReservationDate)
+                .ToListAsync();
+        }
 
-//        /// <summary>
-//        /// 根据联系人查询预订记录，单纯查询无需悲观锁。
-//        /// </summary>
-//        public async Task<List<Reservation>> GetReservationsByContactAsync(string contactNumber)
-//        {
-//            return await _context.Reservations
-//                .Where(r => r.contact_number == contactNumber)
-//                .OrderByDescending(r => r.reservation_date)
-//                .ToListAsync();
-//        }
+        public async Task<Reservation?> UpdateReservationAsync(
+            int reservationId,
+            DateTime date,
+            TimeSpan time,
+            int guests,
+            string? specialRequests)
+        {
+            await using var tx = await _context.Database
+                .BeginTransactionAsync(IsolationLevel.RepeatableRead);
 
-//        /// <summary>
-//        /// 更新预订记录，使用悲观锁对要更新的记录进行锁定，以防并发修改。
-//        /// </summary>
-//        public async Task<bool> UpdateReservationAsync(Reservation updated)
-//        {
-//            using var transaction = await _context.Database.BeginTransactionAsync();
+            // 悲观锁：锁定这一条记录
+            var original = await _context.Reservations
+                .FromSqlInterpolated($@"
+                    SELECT * 
+                      FROM `Reservations`
+                     WHERE id = {reservationId}
+                     FOR UPDATE")
+                .FirstOrDefaultAsync();
 
-//            // 锁定当前要更新的记录
-//            var original = await _context.Reservations
-//                .FromSqlInterpolated($@"
-//                    SELECT * FROM Reservations 
-//                    WHERE id = {updated.id}
-//                    FOR UPDATE")
-//                .FirstOrDefaultAsync();
+            if (original == null)
+            {
+                await tx.RollbackAsync();
+                return null;
+            }
 
-//            if (original == null)
-//            {
-//                await transaction.RollbackAsync();
-//                return false;
-//            }
+            original.ReservationDate = date.Date;
+            original.ReservationTime = time;
+            original.NumberOfGuests = guests;
+            original.SpecialRequests = specialRequests;
 
-//            original.reservation_date = updated.reservation_date;
-//            original.reservation_time = updated.reservation_time;
-//            original.number_of_guests = updated.number_of_guests;
-//            original.special_requests = updated.special_requests;
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+            return original;
+        }
 
-//            await _context.SaveChangesAsync();
-//            await transaction.CommitAsync();
-//            return true;
-//        }
+        public async Task<bool> CancelReservationAsync(int reservationId)
+        {
+            await using var tx = await _context.Database
+                .BeginTransactionAsync(IsolationLevel.RepeatableRead);
 
-//        /// <summary>
-//        /// 取消预订时使用悲观锁锁定记录，确保在并发环境下记录状态唯一。
-//        /// </summary>
-//        public async Task<bool> CancelReservationAsync(int reservationId)
-//        {
-//            using var transaction = await _context.Database.BeginTransactionAsync();
+            // 悲观锁：锁定这一条记录
+            var res = await _context.Reservations
+                .FromSqlInterpolated($@"
+                    SELECT * 
+                      FROM `Reservations`
+                     WHERE id = {reservationId}
+                     FOR UPDATE")
+                .FirstOrDefaultAsync();
 
-//            var res = await _context.Reservations
-//                .FromSqlInterpolated($@"
-//                    SELECT * FROM Reservations 
-//                    WHERE id = {reservationId} 
-//                    FOR UPDATE")
-//                .FirstOrDefaultAsync();
+            if (res == null)
+            {
+                await tx.RollbackAsync();
+                return false;
+            }
 
-//            if (res == null)
-//            {
-//                await transaction.RollbackAsync();
-//                return false;
-//            }
-
-//            res.status = "Cancelled";
-//            await _context.SaveChangesAsync();
-//            await transaction.CommitAsync();
-//            return true;
-//        }
-//    }
-//}
+            res.Status = "Cancelled";
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+            return true;
+        }
+    }
+}

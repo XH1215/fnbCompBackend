@@ -1,126 +1,93 @@
-﻿//using orderAPI.Data;
-//using orderAPI.Models;
-//using Microsoft.EntityFrameworkCore;
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Threading.Tasks;
+﻿using orderAPI.Models;
+using orderAPI.Repositories;
+using orderAPI.Requests.Queue;
+using orderAPI.Results.Queue;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-//namespace orderAPI.Services
-//{
-//    public class QueueService : IQueueService
-//    {
-//        private readonly AppDbContext _context;
+namespace orderAPI.Services
+{
+    public class QueueService : IQueueService
+    {
+        private readonly IQueueRepository _repo;
 
-//        public QueueService(AppDbContext context)
-//        {
-//            _context = context;
-//        }
+        public QueueService(IQueueRepository repo)
+        {
+            _repo = repo;
+        }
 
-//        /// <summary>
-//        /// 加入队列时使用悲观锁锁定相同 outletId 下“Waiting”的所有记录，
-//        /// 防止并发插入导致队列位置计算出错。
-//        /// </summary>
-//        public async Task<Queue> JoinQueueAsync(string contactNumber, int outletId, int numberOfGuests, string? specialRequests)
-//        {
-//            // 使用事务包装整个操作
-//            using var transaction = await _context.Database.BeginTransactionAsync();
+        public async Task<JoinQueueResult> JoinQueueAsync(QueueCreateRequest req)
+        {
+            // 入参校验
+            if (string.IsNullOrWhiteSpace(req.CustomerPhone))
+                return new JoinQueueResult(false, "ContactNumber is required", 0, 0);
 
-//            // 悲观锁定当前 outlet 下所有等待中的队列记录
-//            var waitingQueues = await _context.Queue
-//                .FromSqlInterpolated($@"
-//                    SELECT * FROM Queue 
-//                    WHERE outlet_id = {outletId} AND status = 'Waiting'
-//                    FOR UPDATE")
-//                .ToListAsync();
+            if (req.OutletId <= 0)
+                return new JoinQueueResult(false, "OutletId must be greater than zero", 0, 0);
 
-//            int position = waitingQueues.Count + 1;
+            if (req.NumberOfGuests <= 0)
+                return new JoinQueueResult(false, "NumberOfGuests must be at least 1", 0, 0);
 
-//            var queue = new Queue
-//            {
-//                contact_number = contactNumber,
-//                outlet_id = outletId,
-//                number_of_guests = numberOfGuests,
-//                special_requests = specialRequests,
-//                status = "Waiting",
-//                queue_position = position,
-//                created_at = DateTime.UtcNow
-//            };
+            try
+            {
+                var entry = await _repo.JoinQueueAsync(req.CustomerPhone, req.OutletId, req.NumberOfGuests, req.SpecialRequests);
+                return new JoinQueueResult(true, "Joined queue successfully", entry.Id, entry.QueuePosition);
+            }
+            catch (Exception ex)
+            {
+                return new JoinQueueResult(false, $"Failed to join queue: {ex.Message}", 0, 0);
+            }
+        }
 
-//            _context.Queue.Add(queue);
-//            await _context.SaveChangesAsync();
+        public async Task<GetQueueStatusResult> GetQueueStatusAsync(QueueStatusRequest req)
+        {
+            if (string.IsNullOrWhiteSpace(req.CustomerPhone))
+                return new GetQueueStatusResult(false, "ContactNumber is required", null);
 
-//            // 提交事务后释放锁
-//            await transaction.CommitAsync();
+            if (req.OutletId <= 0)
+                return new GetQueueStatusResult(false, "OutletId must be greater than zero", null);
 
-//            return queue;
-//        }
+            var entry = await _repo.GetQueueStatusAsync(req.CustomerPhone, req.OutletId);
+            if (entry == null)
+                return new GetQueueStatusResult(false, "No waiting queue found", null);
 
-//        /// <summary>
-//        /// 查询队列状态，不需要悲观锁，只做普通查询
-//        /// </summary>
-//        public async Task<Queue?> GetQueueStatusAsync(string contactNumber, int outletId)
-//        {
-//            return await _context.Queue
-//                .Where(q => q.contact_number == contactNumber && q.outlet_id == outletId && q.status == "Waiting")
-//                .OrderBy(q => q.created_at)
-//                .FirstOrDefaultAsync();
-//        }
+            return new GetQueueStatusResult(true,
+                "Queue status retrieved",
+                entry);
+        }
 
-//        /// <summary>
-//        /// 取消队列，仅更新单条记录，不使用悲观锁
-//        /// </summary>
-//        public async Task<bool> CancelQueueAsync(int queueId)
-//        {
-//            var queue = await _context.Queue.FindAsync(queueId);
-//            if (queue == null) return false;
+        public async Task<CancelQueueResult> CancelQueueAsync(QueueCancelRequest req)
+        {
+            if (req.QueueId <= 0)
+                return new CancelQueueResult(false, "QueueId is invalid");
 
-//            queue.status = "Cancelled";
-//            await _context.SaveChangesAsync();
-//            return true;
-//        }
+            var ok = await _repo.CancelQueueAsync(req.QueueId);
+            return ok
+                ? new CancelQueueResult(true, "Queue cancelled successfully")
+                : new CancelQueueResult(false, "Queue record not found");
+        }
 
-//        /// <summary>
-//        /// 获取所有等待中的队列记录，不修改数据，不需要使用锁
-//        /// </summary>
-//        public async Task<List<Queue>> GetAllWaitingQueueEntriesAsync(int outletId)
-//        {
-//            return await _context.Queue
-//                .Where(q => q.outlet_id == outletId && q.status == "Waiting")
-//                .OrderBy(q => q.queue_position)
-//                .ToListAsync();
-//        }
+        public async Task<GetAllWaitingQueueEntriesResult> GetAllWaitingQueueEntriesAsync(AllWaitingQueueRequest req)
+        {
+            if (req.OutletId <= 0)
+                return new GetAllWaitingQueueEntriesResult(false, "OutletId must be greater than zero", null);
 
-//        /// <summary>
-//        /// 通知下一个客户时，需要锁定对应 outlet 下的队列记录，防止并发通知同一记录。
-//        /// </summary>
-//        public async Task<bool> NotifyNextCustomerAsync(int outletId)
-//        {
-//            using var transaction = await _context.Database.BeginTransactionAsync();
+            var list = await _repo.GetAllWaitingQueueEntriesAsync(req.OutletId);
+            return new GetAllWaitingQueueEntriesResult(true,
+                $"Found {list.Count} waiting entries",
+                list);
+        }
 
-//            // 锁定 outletId 下最前面的等待记录
-//            var next = await _context.Queue
-//                .FromSqlInterpolated($@"
-//                    SELECT * FROM Queue 
-//                    WHERE outlet_id = {outletId} AND status = 'Waiting'
-//                    ORDER BY queue_position 
-//                    LIMIT 1
-//                    FOR UPDATE")
-//                .FirstOrDefaultAsync();
+        public async Task<NotifyNextCustomerResult> NotifyNextCustomerAsync(NotifyNextCustomerRequest req)
+        {
+            if (req.OutletId <= 0)
+                return new NotifyNextCustomerResult(false, "OutletId must be greater than zero");
 
-//            if (next == null)
-//            {
-//                await transaction.RollbackAsync();
-//                return false;
-//            }
-
-//            next.status = "Notified";
-//            next.notified_at = DateTime.UtcNow;
-//            await _context.SaveChangesAsync();
-
-//            await transaction.CommitAsync();
-
-//            return true;
-//        }
-//    }
-//}
+            var ok = await _repo.NotifyNextCustomerAsync(req.OutletId);
+            return ok
+                ? new NotifyNextCustomerResult(true, "Next customer notified")
+                : new NotifyNextCustomerResult(false, "No waiting customer to notify");
+        }
+    }
+}

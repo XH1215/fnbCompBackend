@@ -1,121 +1,136 @@
-﻿//using orderAPI.Data;
-//using orderAPI.Models;
-//using Microsoft.EntityFrameworkCore;
-//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Threading.Tasks;
+﻿using Microsoft.EntityFrameworkCore;
+using orderAPI.Data;
+using orderAPI.Models;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-//namespace orderAPI.Repositories
-//{
-//    public class QueueRepository : IQueueRepository
-//    {
-//        private readonly AppDbContext _context;
+namespace orderAPI.Repositories
+{
+    public class QueueRepository : IQueueRepository
+    {
+        private readonly AppDbContext _context;
 
-//        public QueueRepository(AppDbContext context)
-//        {
-//            _context = context;
-//        }
+        public QueueRepository(AppDbContext context)
+        {
+            _context = context;
+        }
 
-//        /// <summary>
-//        /// 加入队列，同时使用悲观锁锁定 outletId 下所有等待记录，确保队列位置的计算不会出现并发问题。
-//        /// </summary>
-//        public async Task<Queue> JoinQueueAsync(string contactNumber, int outletId, int numberOfGuests, string? specialRequests)
-//        {
-//            using var transaction = await _context.Database.BeginTransactionAsync();
+        public async Task<Queue> JoinQueueAsync(string contactNumber, int outletId, int numberOfGuests, string? specialRequests)
+        {
+            // 使用 RepeatableRead 级别的事务进行悲观锁定
+            await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
-//            // 锁定当前 outlet 下所有等待中的队列记录
-//            var waitingQueues = await _context.Queue
-//                .FromSqlInterpolated($@"
-//                    SELECT * FROM Queue 
-//                    WHERE outlet_id = {outletId} AND status = 'Waiting'
-//                    FOR UPDATE")
-//                .ToListAsync();
+            // 锁定当前 outlet 下所有 Waiting 的记录
+            var waiting = await _context.Queue
+                .FromSqlInterpolated($@"
+                    SELECT * FROM `Queue`
+                    WHERE outlet_id = {outletId}
+                      AND status = 'Waiting'
+                    FOR UPDATE")
+                .ToListAsync();
 
-//            int position = waitingQueues.Count + 1;
+            var position = waiting.Count + 1;
+            var entry = new Queue
+            {
+                ContactNumber = contactNumber,
+                OutletId = outletId,
+                NumberOfGuests = numberOfGuests,
+                SpecialRequests = specialRequests,
+                Status = "Waiting",
+                QueuePosition = position,
+                CreatedAt = DateTime.UtcNow
+            };
 
-//            var queue = new Queue
-//            {
-//                contact_number = contactNumber,
-//                outlet_id = outletId,
-//                number_of_guests = numberOfGuests,
-//                special_requests = specialRequests,
-//                status = "Waiting",
-//                queue_position = position,
-//                created_at = DateTime.UtcNow
-//            };
+            _context.Queue.Add(entry);
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
 
-//            _context.Queue.Add(queue);
-//            await _context.SaveChangesAsync();
-//            await transaction.CommitAsync();
+            return entry;
+        }
 
-//            return queue;
-//        }
+        public async Task<Queue?> UpdateQueueAsync(int queueId, string? specialRequests)
+        {
+            await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
-//        /// <summary>
-//        /// 获取指定用户在 outlet 下等待中的队列记录，查询不需要加锁。
-//        /// </summary>
-//        public async Task<Queue?> GetQueueStatusAsync(string contactNumber, int outletId)
-//        {
-//            return await _context.Queue
-//                .Where(q => q.contact_number == contactNumber && q.outlet_id == outletId && q.status == "Waiting")
-//                .OrderBy(q => q.created_at)
-//                .FirstOrDefaultAsync();
-//        }
+            // 锁定指定队列记录
+            var entry = await _context.Queue
+                .FromSqlInterpolated($@"
+                    SELECT * FROM `Queue`
+                    WHERE id = {queueId}
+                    FOR UPDATE")
+                .FirstOrDefaultAsync();
 
-//        /// <summary>
-//        /// 取消队列，不需要额外加锁，直接通过主键查找记录并更新状态。
-//        /// </summary>
-//        public async Task<bool> CancelQueueAsync(int queueId)
-//        {
-//            var queue = await _context.Queue.FindAsync(queueId);
-//            if (queue == null) return false;
+            if (entry == null)
+            {
+                await tx.RollbackAsync();
+                return null;
+            }
 
-//            queue.status = "Cancelled";
-//            await _context.SaveChangesAsync();
-//            return true;
-//        }
+            entry.SpecialRequests = specialRequests;
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+            return entry;
+        }
 
-//        /// <summary>
-//        /// 获取所有等待中的队列记录（根据 outletId），查询无需加锁。
-//        /// </summary>
-//        public async Task<List<Queue>> GetAllWaitingQueueEntriesAsync(int outletId)
-//        {
-//            return await _context.Queue
-//                .Where(q => q.outlet_id == outletId && q.status == "Waiting")
-//                .OrderBy(q => q.queue_position)
-//                .ToListAsync();
-//        }
+        public async Task<bool> CancelQueueAsync(int queueId)
+        {
+            await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
-//        /// <summary>
-//        /// 通知下一个客户时使用悲观锁锁定 outletId 下最前的一条等待记录，防止并发问题。
-//        /// </summary>
-//        public async Task<bool> NotifyNextCustomerAsync(int outletId)
-//        {
-//            using var transaction = await _context.Database.BeginTransactionAsync();
+            var entry = await _context.Queue
+                .FromSqlInterpolated($@"
+                    SELECT * FROM `Queue`
+                    WHERE id = {queueId}
+                    FOR UPDATE")
+                .FirstOrDefaultAsync();
 
-//            // 锁定 outlet 下最前面的等待记录
-//            var next = await _context.Queue
-//                .FromSqlInterpolated($@"
-//                    SELECT * FROM Queue 
-//                    WHERE outlet_id = {outletId} AND status = 'Waiting'
-//                    ORDER BY queue_position 
-//                    LIMIT 1
-//                    FOR UPDATE")
-//                .FirstOrDefaultAsync();
+            if (entry == null)
+            {
+                await tx.RollbackAsync();
+                return false;
+            }
 
-//            if (next == null)
-//            {
-//                await transaction.RollbackAsync();
-//                return false;
-//            }
+            entry.Status = "Cancelled";
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+            return true;
+        }
 
-//            next.status = "Notified";
-//            next.notified_at = DateTime.UtcNow;
-//            await _context.SaveChangesAsync();
+        public async Task<List<Queue>> GetAllWaitingQueueEntriesAsync(int outletId)
+        {
+            // 纯查询，无需锁
+            return await _context.Queue
+                .Where(q => q.OutletId == outletId && q.Status == "Waiting")
+                .OrderBy(q => q.QueuePosition)
+                .ToListAsync();
+        }
 
-//            await transaction.CommitAsync();
-//            return true;
-//        }
-//    }
-//}
+        public async Task<bool> NotifyNextCustomerAsync(int outletId)
+        {
+            await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
+
+            // 锁定最先加入的 Waiting 记录
+            var next = await _context.Queue
+                .FromSqlInterpolated($@"
+                    SELECT * FROM `Queue`
+                    WHERE outlet_id = {outletId}
+                      AND status = 'Waiting'
+                    ORDER BY queue_position
+                    LIMIT 1
+                    FOR UPDATE")
+                .FirstOrDefaultAsync();
+
+            if (next == null)
+            {
+                await tx.RollbackAsync();
+                return false;
+            }
+
+            next.Status = "Notified";
+            next.NotifiedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+            return true;
+        }
+    }
+}
