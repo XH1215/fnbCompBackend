@@ -11,38 +11,23 @@ namespace orderAPI.Services
     public class NotificationService : INotificationService
     {
         private readonly INotificationRepository _notificationRepository;
+        private readonly IWhatsAppService _whatsAppService;
 
-        public NotificationService(INotificationRepository notificationRepository)
+        public NotificationService(INotificationRepository notificationRepository, IWhatsAppService whatsAppService)
         {
             _notificationRepository = notificationRepository;
+            _whatsAppService = whatsAppService;
         }
 
-        public async Task<bool> SendWhatsAppMessageAsync(string phone, string message, string type)
+        public async Task<bool> SendWhatsAppMessageAsync(string phone, string template, string type)
         {
-            bool isSuccessful = false;
-            string status = "Failed";
+            bool isSuccessful = await _whatsAppService.SendTemplateMessageAsync(phone, template);
+            string status = isSuccessful ? "Sent" : "Failed";
 
-            try
-            {
-                // Here you would implement the actual WhatsApp API call
-                // For now, let's simulate a successful message
-                isSuccessful = true;
-                status = "Sent";
-
-                // In a real implementation, you would make a call to the WhatsApp API
-                // If it fails, set status to "Failed"
-            }
-            catch (Exception)
-            {
-                isSuccessful = false;
-                status = "Failed";
-            }
-
-            // Log the notification attempt regardless of success/failure
             var log = new NotificationLog
             {
                 ContactNumber = phone,
-                Message = message,
+                Message = template,
                 Type = type,
                 Status = status,
                 SentAt = DateTime.UtcNow
@@ -52,37 +37,12 @@ namespace orderAPI.Services
             return isSuccessful;
         }
 
-        public async Task<List<NotificationLogDTO>> GetLogsAsync(string? phone = null, string? type = null)
-        {
-            var logs = await _notificationRepository.GetLogsAsync(phone, type);
-            return logs.ToDtoList();
-        }
-
         public async Task<bool> ResendFailedNotificationAsync(int logId)
         {
             var log = await _notificationRepository.GetLogByIdAsync(logId);
-            
-            if (log == null || log.Status == "Sent")
-                return false;
+            if (log == null || log.Status == "Sent") return false;
 
-            // Attempt to resend the message
-            bool isSuccessful = false;
-            string status = "Failed";
-
-            try
-            {
-                // Here you would implement the actual resend logic
-                // For now, let's simulate a successful message
-                isSuccessful = true;
-                status = "Sent";
-            }
-            catch (Exception)
-            {
-                isSuccessful = false;
-                status = "Failed";
-            }
-
-            // Create a new log entry for the resend attempt
+            bool isSuccessful = await _whatsAppService.SendTemplateMessageAsync(log.ContactNumber, log.Message);
             if (isSuccessful)
             {
                 var newLog = new NotificationLog
@@ -93,17 +53,22 @@ namespace orderAPI.Services
                     Status = "Sent",
                     SentAt = DateTime.UtcNow
                 };
-
                 await _notificationRepository.CreateLogAsync(newLog);
             }
             else
             {
-                // Update the status of the original log
                 log.Status = "Failed";
                 await _notificationRepository.UpdateLogAsync(log);
             }
 
             return isSuccessful;
+        }
+
+
+        public async Task<List<NotificationLogDTO>> GetLogsAsync(string? phone = null, string? type = null)
+        {
+            var logs = await _notificationRepository.GetLogsAsync(phone, type);
+            return logs.ToDtoList();
         }
     }
 }
