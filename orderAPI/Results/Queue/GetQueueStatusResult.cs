@@ -1,17 +1,17 @@
-using OrderAPI.Models;
+//using orderAPI.Models;
 
-namespace OrderAPI.Results.Queue
-{
-    public class GetQueueStatusResult : BaseResult<Queue>
-    {
-        public GetQueueStatusResult(bool success, string message, Queue data)
-            : base(success, message, data)
-        {
-        }
+//namespace orderAPI.Results.Queue
+//{
+//    public class GetQueueStatusResult : BaseResult<Queue>
+//    {
+//        public GetQueueStatusResult(bool success, string message, Queue data)
+//            : base(success, message, data)
+//        {
+//        }
 
-        public GetQueueStatusResult(bool success, string message)
-            : base(success, message)
-        {
-        }
-    }
-}
+//        public GetQueueStatusResult(bool success, string message)
+//            : base(success, message)
+//        {
+//        }
+//    }
+//}

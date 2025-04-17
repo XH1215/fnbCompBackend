@@ -9,7 +9,6 @@ namespace orderAPI.Data
 
         public DbSet<Outlet> Outlets { get; set; }
         public DbSet<Staff> Staffs { get; set; }
-        public DbSet<Customer> Customers { get; set; }
         public DbSet<BannedCustomer> BannedCustomers { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<Queue> Queues { get; set; }

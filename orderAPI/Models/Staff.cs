@@ -6,13 +6,14 @@
         public string Name { get; set; }
         public string Email { get; set; }
         public string PasswordHash { get; set; }
-        public string Role { get; set; } // Admin or OutletStaff
+        public string Role { get; set; } // Enum: Admin, OutletStaff
         public int? OutletId { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; }
 
-        // Navigation Property
-        public Outlet Outlet { get; set; }
+        // Navigation
+        public Outlet? Outlet { get; set; }
     }
+
 
 }
