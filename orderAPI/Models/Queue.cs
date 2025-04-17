@@ -3,7 +3,7 @@
     public class Queue
     {
         public int Id { get; set; }
-        public int CustomerId { get; set; }
+        public int ContactNumber { get; set; }
         public int OutletId { get; set; }
         public int NumberOfGuests { get; set; }
         public string SpecialRequests { get; set; }
@@ -14,7 +14,7 @@
         public DateTime? ServedAt { get; set; }
 
         // Navigation Properties
-        public Customer Customer { get; set; }
+
         public Outlet Outlet { get; set; }
     }
 }
