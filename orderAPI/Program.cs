@@ -34,6 +34,11 @@ builder.Services.AddScoped<IStaffService, StaffService>();
 builder.Services.AddScoped<IBanService, BanService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
+//whatsapp
+builder.Services.AddHttpClient<IWhatsAppService, WhatsAppService>();
+
+
+
 var app = builder.Build();
 
 // Middleware
