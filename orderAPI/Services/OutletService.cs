@@ -1,9 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using orderAPI.DTO;
 using orderAPI.Helper;
 using orderAPI.Models;
 using orderAPI.Repositories;
-using System.Data;
 
 
 namespace orderAPI.Services

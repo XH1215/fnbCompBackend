@@ -3,8 +3,6 @@ using orderAPI.Models;
 using orderAPI.Requests.Staff;
 using orderAPI.Results.Staff;
 using orderAPI.Services;
-using System;
-using System.Threading.Tasks;
 
 namespace orderAPI.Controllers
 {
@@ -58,7 +56,7 @@ namespace orderAPI.Controllers
         [HttpGet("byoutlet/{outletId}")]
         public async Task<ActionResult<GetStaffsResult>> GetStaffByOutlet(int outletId)
         {
-            var staffs = await _staffService.GetAllStaffAsync(null,outletId);
+            var staffs = await _staffService.GetAllStaffAsync(null, outletId);
             return Ok(new GetStaffsResult(true, "Staffs retrieved successfully", staffs));
         }
 
@@ -109,8 +107,8 @@ namespace orderAPI.Controllers
         public async Task<ActionResult<VerifyPasswordResult>> VerifyPassword([FromBody] VerifyPasswordRequest request)
         {
             var result = await _staffService.VerifyPasswordAsync(request.Email, request.Password);
-            
+
             return Ok(new VerifyPasswordResult(true, "Password verification completed", result));
         }
     }
-} 
+}

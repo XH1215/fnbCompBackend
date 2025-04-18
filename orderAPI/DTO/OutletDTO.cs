@@ -1,5 +1,3 @@
-using orderAPI.Models;
-
 namespace orderAPI.DTO
 {
     public class OutletDTO
@@ -11,4 +9,4 @@ namespace orderAPI.DTO
         public int Capacity { get; set; }
         public DateTime CreatedAt { get; set; }
     }
-} 
+}

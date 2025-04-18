@@ -15,4 +15,4 @@ namespace orderAPI.Results.Staff
             Staff = staff;
         }
     }
-} 
+}

@@ -19,4 +19,4 @@ namespace orderAPI.Results.Ban
             BannedCustomer = bannedCustomer;
         }
     }
-} 
+}

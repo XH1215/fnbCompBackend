@@ -1,4 +1,3 @@
-using orderAPI.Models;
 using ReservationOrder = orderAPI.Models.Reservation;
 
 namespace orderAPI.Results.Reservation

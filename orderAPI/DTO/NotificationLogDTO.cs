@@ -1,5 +1,3 @@
-using System;
-
 namespace orderAPI.DTO
 {
     public class NotificationLogDTO
@@ -11,4 +9,4 @@ namespace orderAPI.DTO
         public DateTime SentAt { get; set; }
         public string Status { get; set; } = string.Empty; // Enum: Sent, Failed
     }
-} 
+}

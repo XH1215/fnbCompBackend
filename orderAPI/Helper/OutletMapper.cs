@@ -1,6 +1,5 @@
 using orderAPI.DTO;
 using orderAPI.Models;
-using System.Collections.Generic;
 
 namespace orderAPI.Helper
 {
@@ -24,4 +23,4 @@ namespace orderAPI.Helper
             return outlets.Select(outlet => outlet.ToDto()).ToList();
         }
     }
-} 
+}

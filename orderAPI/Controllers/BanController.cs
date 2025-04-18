@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using orderAPI.Requests.Ban;
 using orderAPI.Results.Ban;
 using orderAPI.Services;
-using System;
-using System.Threading.Tasks;
 
 namespace orderAPI.Controllers
 {
@@ -24,27 +22,27 @@ namespace orderAPI.Controllers
             try
             {
                 var bannedCustomerDto = await _banService.BanCustomerAsync(request.Phone, request.Reason);
-                return Ok(new BanCustomerResult 
-                { 
-                    Success = true, 
-                    Message = "Customer banned successfully", 
-                    BannedCustomer = bannedCustomerDto 
+                return Ok(new BanCustomerResult
+                {
+                    Success = true,
+                    Message = "Customer banned successfully",
+                    BannedCustomer = bannedCustomerDto
                 });
             }
             catch (InvalidOperationException ex)
             {
-                return BadRequest(new BanCustomerResult 
-                { 
-                    Success = false, 
-                    Message = ex.Message 
+                return BadRequest(new BanCustomerResult
+                {
+                    Success = false,
+                    Message = ex.Message
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new BanCustomerResult 
-                { 
-                    Success = false, 
-                    Message = $"An error occurred: {ex.Message}" 
+                return StatusCode(500, new BanCustomerResult
+                {
+                    Success = false,
+                    Message = $"An error occurred: {ex.Message}"
                 });
             }
         }
@@ -54,16 +52,16 @@ namespace orderAPI.Controllers
         {
             var result = await _banService.UnbanCustomerAsync(id);
             if (!result)
-                return NotFound(new UnbanCustomerResult 
-                { 
-                    Success = false, 
-                    Message = "Banned customer not found or unban failed" 
+                return NotFound(new UnbanCustomerResult
+                {
+                    Success = false,
+                    Message = "Banned customer not found or unban failed"
                 });
 
-            return Ok(new UnbanCustomerResult 
-            { 
-                Success = true, 
-                Message = "Customer unbanned successfully" 
+            return Ok(new UnbanCustomerResult
+            {
+                Success = true,
+                Message = "Customer unbanned successfully"
             });
         }
 
@@ -71,11 +69,11 @@ namespace orderAPI.Controllers
         public async Task<ActionResult<IsBannedResult>> CheckIfBanned(string phone)
         {
             var isBanned = await _banService.IsBannedAsync(phone);
-            return Ok(new IsBannedResult 
-            { 
-                Success = true, 
-                Message = isBanned ? "Phone number is banned" : "Phone number is not banned", 
-                IsBanned = isBanned 
+            return Ok(new IsBannedResult
+            {
+                Success = true,
+                Message = isBanned ? "Phone number is banned" : "Phone number is not banned",
+                IsBanned = isBanned
             });
         }
 
@@ -83,11 +81,11 @@ namespace orderAPI.Controllers
         public async Task<ActionResult<GetBannedCustomersResult>> GetAllBannedCustomers()
         {
             var bannedCustomers = await _banService.GetAllBannedCustomersAsync();
-            return Ok(new GetBannedCustomersResult 
-            { 
-                Success = true, 
-                Message = "Banned customers retrieved successfully", 
-                BannedCustomers = bannedCustomers 
+            return Ok(new GetBannedCustomersResult
+            {
+                Success = true,
+                Message = "Banned customers retrieved successfully",
+                BannedCustomers = bannedCustomers
             });
         }
 
@@ -96,18 +94,18 @@ namespace orderAPI.Controllers
         {
             var bannedCustomer = await _banService.GetBannedCustomerByIdAsync(id);
             if (bannedCustomer == null)
-                return NotFound(new BanCustomerResult 
-                { 
-                    Success = false, 
-                    Message = "Banned customer not found" 
+                return NotFound(new BanCustomerResult
+                {
+                    Success = false,
+                    Message = "Banned customer not found"
                 });
 
-            return Ok(new BanCustomerResult 
-            { 
-                Success = true, 
-                Message = "Banned customer retrieved successfully", 
-                BannedCustomer = bannedCustomer 
+            return Ok(new BanCustomerResult
+            {
+                Success = true,
+                Message = "Banned customer retrieved successfully",
+                BannedCustomer = bannedCustomer
             });
         }
     }
-} 
+}

@@ -1,7 +1,5 @@
 using orderAPI.DTO;
 using orderAPI.Models;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace orderAPI.Helper
 {
@@ -25,4 +23,4 @@ namespace orderAPI.Helper
             return logs.Select(log => log.ToDto()).ToList();
         }
     }
-} 
+}

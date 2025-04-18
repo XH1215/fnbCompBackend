@@ -1,5 +1,4 @@
 using orderAPI.DTO;
-using System.Collections.Generic;
 
 namespace orderAPI.Results.Notification
 {
@@ -20,4 +19,4 @@ namespace orderAPI.Results.Notification
             Logs = logs;
         }
     }
-} 
+}

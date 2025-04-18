@@ -1,13 +1,11 @@
 using orderAPI.DTO;
 using orderAPI.Models;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace orderAPI.Services
 {
     public interface IStaffService
     {
- 
+
         Task<StaffDTO> GetStaffByIdAsync(int id);
         Task<StaffDTO> GetStaffByEmailAsync(string email);
         Task<StaffDTO> CreateStaffAsync(string name, string email, string password, string role, int? outletId);

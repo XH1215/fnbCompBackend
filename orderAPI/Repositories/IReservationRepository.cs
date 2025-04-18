@@ -1,7 +1,4 @@
 ﻿// Repositories/IReservationRepository.cs
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using orderAPI.Models;
 
 namespace orderAPI.Repositories

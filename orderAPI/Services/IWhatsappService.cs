@@ -2,7 +2,7 @@
 {
     public interface IWhatsAppService
     {
-        Task<bool> SendTemplateMessageAsync(string toPhoneNumber, string templateName, string languageCode = "en_US");
+        public Task<bool> SendTemplateMessageAsync(string toPhoneNumber, string customerName, int queue, string templateName = "queue_notification", string languageCode = "en_US");
     }
 
 }

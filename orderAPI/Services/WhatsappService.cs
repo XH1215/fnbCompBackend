@@ -1,9 +1,6 @@
-﻿using System.Net.Http;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
 using orderAPI.Services;
 
 public class WhatsAppService : IWhatsAppService
@@ -17,9 +14,9 @@ public class WhatsAppService : IWhatsAppService
         _configuration = configuration;
     }
 
-    public async Task<bool> SendTemplateMessageAsync(string toPhoneNumber, string templateName, string languageCode = "en_US")
+    public async Task<bool> SendTemplateMessageAsync(string toPhoneNumber, string customerName, int queue, string templateName, string languageCode = "en_US")
     {
-        var token = _configuration["WhatsApp:AccessToken"];
+        var token = "EAARXmliTbYwBO0CX6fIhr7B0ZBvLSCPfD2I7sQBrVXZC7y03yIFUrEM0TxvJXy8XxDUwcnpvTQ8Vxh9MbKEZAzaPvrK7pk3RfWhnP7fNPCsqMBTfhigsvJ6X8XygvUQ8ggUpmyU2vsIMDrr4ZA6cxLm8ISw49qfT2BUBrXeP5aPDZAqfjywZCt8aAcoRByUkKkMZAfBN691qEdMvkJimYXZAHlXZAaK7U";
         var phoneNumberId = _configuration["WhatsApp:PhoneNumberId"];
         var url = $"https://graph.facebook.com/v22.0/{phoneNumberId}/messages";
 
@@ -30,12 +27,29 @@ public class WhatsAppService : IWhatsAppService
             type = "template",
             template = new
             {
-                name = templateName,
-                language = new { code = languageCode }
+                name = "queue_notification",
+                language = new { code = languageCode },
+                components = new[]
+                {
+            new
+            {
+                type = "body",
+                parameters = new object[]
+                {
+                    new { type = "text", text = customerName},
+                    new { type = "text", text = queue}
+                }
+            }
+        }
             }
         };
 
-        var requestContent = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+        var requestContent = new StringContent(
+            JsonSerializer.Serialize(payload),
+            Encoding.UTF8,
+            "application/json"
+        );
+
         _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         var response = await _httpClient.PostAsync(url, requestContent);

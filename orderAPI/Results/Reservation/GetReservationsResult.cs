@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using ReservationOrder = orderAPI.Models.Reservation;
 
 namespace orderAPI.Results.Reservation

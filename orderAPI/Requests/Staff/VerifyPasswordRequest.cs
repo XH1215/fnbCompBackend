@@ -5,4 +5,4 @@ namespace orderAPI.Requests.Staff
         public string Email { get; set; }
         public string Password { get; set; }
     }
-} 
+}

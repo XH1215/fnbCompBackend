@@ -1,11 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using orderAPI.DTO;
 using orderAPI.Models;
 using orderAPI.Requests.Outlet;
 using orderAPI.Results.Outlet;
 using orderAPI.Services;
-using System;
-using System.Threading.Tasks;
 
 namespace orderAPI.Controllers
 {
@@ -30,7 +27,7 @@ namespace orderAPI.Controllers
                     request.Location,
                     request.OperatingHours,
                     request.Capacity);
-                
+
                 return Ok(new CreateOutletResult { Success = true, Message = "Outlet created successfully", Outlet = outletDto });
             }
             catch (Exception ex)
@@ -44,7 +41,7 @@ namespace orderAPI.Controllers
         {
             var outletDto = await _outletService.GetOutletByIdAsync(id);
             if (outletDto == null)
-                return NotFound(new GetOutletResult {Success = false, Message = "Outlet not found" });
+                return NotFound(new GetOutletResult { Success = false, Message = "Outlet not found" });
 
             return Ok(new GetOutletResult { Success = true, Message = "Outlet retrieved successfully", Outlet = outletDto });
         }
@@ -85,4 +82,4 @@ namespace orderAPI.Controllers
             return Ok(new DeleteOutletResult(true, "Outlet deleted successfully"));
         }
     }
-} 
+}

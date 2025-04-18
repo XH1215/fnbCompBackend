@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc.RazorPages;
-using orderAPI.Results;
-using QueueModel = orderAPI.Models.Queue;
+﻿using QueueModel = orderAPI.Models.Queue;
 
 namespace orderAPI.Results.Queue
 {

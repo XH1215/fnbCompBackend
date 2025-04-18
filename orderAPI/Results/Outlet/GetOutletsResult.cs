@@ -1,7 +1,4 @@
 using orderAPI.DTO;
-using orderAPI.Helper;
-using orderAPI.Models;
-using System.Collections.Generic;
 
 namespace orderAPI.Results.Outlet
 {
@@ -19,7 +16,7 @@ namespace orderAPI.Results.Outlet
         {
             Success = success;
             Message = message;
-            
+
         }
     }
-} 
+}

@@ -7,4 +7,4 @@ namespace orderAPI.Requests.Outlet
         public string OperatingHours { get; set; }
         public int Capacity { get; set; }
     }
-} 
+}

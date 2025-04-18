@@ -2,8 +2,6 @@ using Microsoft.AspNetCore.Mvc;
 using orderAPI.Requests.Notification;
 using orderAPI.Results.Notification;
 using orderAPI.Services;
-using System;
-using System.Threading.Tasks;
 
 namespace orderAPI.Controllers
 {
@@ -25,7 +23,9 @@ namespace orderAPI.Controllers
             {
                 var result = await _notificationService.SendWhatsAppMessageAsync(
                     request.Phone,
-                    request.Message,
+                    request.CustomerName,
+                    request.Queue,
+                    request.Template,
                     request.Type);
 
                 return Ok(new SendMessageResult
@@ -68,40 +68,5 @@ namespace orderAPI.Controllers
                 });
             }
         }
-
-        [HttpPost("resend/{logId}")]
-        public async Task<ActionResult<ResendNotificationResult>> ResendNotification(int logId)
-        {
-            try
-            {
-                var result = await _notificationService.ResendFailedNotificationAsync(logId);
-                
-                if (!result)
-                {
-                    return BadRequest(new ResendNotificationResult
-                    {
-                        Success = false,
-                        Message = "Failed to resend notification. The log may not exist or the message was already successfully sent.",
-                        IsResent = false
-                    });
-                }
-
-                return Ok(new ResendNotificationResult
-                {
-                    Success = true,
-                    Message = "Notification resent successfully",
-                    IsResent = true
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new ResendNotificationResult
-                {
-                    Success = false,
-                    Message = $"An error occurred: {ex.Message}",
-                    IsResent = false
-                });
-            }
-        }
     }
-} 
+}

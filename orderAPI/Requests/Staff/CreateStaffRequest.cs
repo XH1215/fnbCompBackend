@@ -8,4 +8,4 @@ namespace orderAPI.Requests.Staff
         public string Role { get; set; }
         public int? OutletId { get; set; }
     }
-} 
+}

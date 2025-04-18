@@ -1,9 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using orderAPI.Data;
 using orderAPI.Models;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace orderAPI.Repositories
 {

@@ -1,6 +1,4 @@
-﻿using orderAPI.Models;
-
-namespace orderAPI.DTO
+﻿namespace orderAPI.DTO
 {
     public class StaffDTO
     {

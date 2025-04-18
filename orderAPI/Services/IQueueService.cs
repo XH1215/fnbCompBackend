@@ -1,6 +1,5 @@
 ﻿using orderAPI.Requests.Queue;
 using orderAPI.Results.Queue;
-using System.Threading.Tasks;
 
 namespace orderAPI.Services
 {

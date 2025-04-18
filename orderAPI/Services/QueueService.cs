@@ -1,10 +1,6 @@
-﻿using orderAPI.Models;
-using orderAPI.Repositories;
+﻿using orderAPI.Repositories;
 using orderAPI.Requests.Queue;
 using orderAPI.Results.Queue;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace orderAPI.Services
 {

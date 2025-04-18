@@ -15,4 +15,4 @@ namespace orderAPI.Results.Ban
             Message = message;
         }
     }
-} 
+}

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace orderAPI.Models
+﻿namespace orderAPI.Models
 {
     public class NotificationLog
     {

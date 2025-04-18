@@ -1,6 +1,4 @@
 using orderAPI.DTO;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace orderAPI.Services
 {

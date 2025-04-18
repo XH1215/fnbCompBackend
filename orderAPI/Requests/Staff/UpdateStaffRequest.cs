@@ -9,4 +9,4 @@ namespace orderAPI.Requests.Staff
         public int? OutletId { get; set; }
         public bool IsActive { get; set; }
     }
-} 
+}

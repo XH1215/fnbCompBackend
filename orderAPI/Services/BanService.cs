@@ -2,9 +2,6 @@ using orderAPI.DTO;
 using orderAPI.Helper;
 using orderAPI.Models;
 using orderAPI.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace orderAPI.Services
 {

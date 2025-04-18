@@ -17,4 +17,4 @@ namespace orderAPI.Results.Notification
             IsResent = isResent;
         }
     }
-} 
+}

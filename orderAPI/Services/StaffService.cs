@@ -1,12 +1,9 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using orderAPI.DTO;
 using orderAPI.Helper;
 using orderAPI.Models;
 using orderAPI.Repositories;
-using System;
-using System.Collections.Generic;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
 
 namespace orderAPI.Services
 {

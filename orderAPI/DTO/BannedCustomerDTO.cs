@@ -1,5 +1,3 @@
-using System;
-
 namespace orderAPI.DTO
 {
     public class BannedCustomerDTO
@@ -9,4 +7,4 @@ namespace orderAPI.DTO
         public string Reason { get; set; } = string.Empty;
         public DateTime BannedAt { get; set; }
     }
-} 
+}

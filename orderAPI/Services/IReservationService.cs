@@ -1,6 +1,5 @@
 using orderAPI.Requests.Reservation;
 using orderAPI.Results.Reservation;
-using System.Threading.Tasks;
 
 namespace orderAPI.Services
 {

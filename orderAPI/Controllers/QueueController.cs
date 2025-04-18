@@ -1,6 +1,5 @@
 ﻿// Controllers/QueueController.cs
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using orderAPI.Requests.Queue;
 using orderAPI.Results.Queue;
 using orderAPI.Services;

@@ -1,5 +1,4 @@
 using orderAPI.DTO;
-using orderAPI.Models;
 
 namespace orderAPI.Results.Staff
 {
@@ -16,4 +15,4 @@ namespace orderAPI.Results.Staff
             Staff = staff;
         }
     }
-} 
+}

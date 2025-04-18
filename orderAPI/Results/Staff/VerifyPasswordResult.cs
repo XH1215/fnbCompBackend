@@ -13,4 +13,4 @@ namespace orderAPI.Results.Staff
             IsValid = isValid;
         }
     }
-} 
+}

@@ -5,4 +5,4 @@ namespace orderAPI.Requests.Ban
         public string Phone { get; set; }
         public string Reason { get; set; }
     }
-} 
+}
