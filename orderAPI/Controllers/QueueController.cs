@@ -22,7 +22,7 @@ namespace orderAPI.Controllers
         /// 加入排队
         /// </summary>
         [HttpPost("join")]
-        public async Task<ActionResult<JoinQueueResult>> Join([FromBody] QueueCreateRequest req)
+        public async Task<ActionResult<JoinQueueResult>> Join([FromBody] JoinQueueRequest req)
         {
             var result = await _queueService.JoinQueueAsync(req);
             if (!result.Success) return BadRequest(result);
@@ -30,15 +30,16 @@ namespace orderAPI.Controllers
         }
 
         /// <summary>
-        /// 获取当前排队状态
+        /// 更新排队请求（特殊需求）
         /// </summary>
-        [HttpPost("status")]
-        public async Task<ActionResult<GetQueueStatusResult>> Status([FromBody] QueueStatusRequest req)
+        [HttpPut("update")]
+        public async Task<ActionResult<UpdateQueueResult>> Update([FromBody] UpdateQueueRequest req)
         {
-            var result = await _queueService.GetQueueStatusAsync(req);
-            if (!result.Success) return NotFound(result);
+            var result = await _queueService.UpdateQueueAsync(req);
+            if (!result.Success) return BadRequest(result);
             return Ok(result);
         }
+
 
         /// <summary>
         /// 取消排队
