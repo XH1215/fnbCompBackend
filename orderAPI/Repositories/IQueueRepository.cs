@@ -1,10 +1,12 @@
-// Repositories/IQueueRepository.cs
+using orderAPI.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using orderAPI.Models;
 
 namespace orderAPI.Repositories
 {
+    /// <summary>
+    /// Defines persistence operations for queue entries
+    /// </summary>
     public interface IQueueRepository
     {
         Task<Queue> JoinQueueAsync(string contactNumber, int outletId, int numberOfGuests, string? specialRequests);

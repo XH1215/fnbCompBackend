@@ -3,6 +3,7 @@ using orderAPI.Data;
 using orderAPI.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace orderAPI.Repositories
@@ -16,13 +17,16 @@ namespace orderAPI.Repositories
             _context = context;
         }
 
-        public async Task<Queue> JoinQueueAsync(string contactNumber, int outletId, int numberOfGuests, string? specialRequests)
+        public async Task<Queue> JoinQueueAsync(
+            string contactNumber,
+            int outletId,
+            int numberOfGuests,
+            string? specialRequests)
         {
-            // 使用 RepeatableRead 级别的事务进行悲观锁定
-            await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
+            await using var tx = await _context.Database
+                .BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
-            // 锁定当前 outlet 下所有 Waiting 的记录
-            var waiting = await _context.Queue
+            var waiting = await _context.Queues
                 .FromSqlInterpolated($@"
                     SELECT * FROM `Queue`
                     WHERE outlet_id = {outletId}
@@ -42,7 +46,7 @@ namespace orderAPI.Repositories
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.Queue.Add(entry);
+            _context.Queues.Add(entry);
             await _context.SaveChangesAsync();
             await tx.CommitAsync();
 
@@ -51,10 +55,10 @@ namespace orderAPI.Repositories
 
         public async Task<Queue?> UpdateQueueAsync(int queueId, string? specialRequests)
         {
-            await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
+            await using var tx = await _context.Database
+                .BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
-            // 锁定指定队列记录
-            var entry = await _context.Queue
+            var entry = await _context.Queues
                 .FromSqlInterpolated($@"
                     SELECT * FROM `Queue`
                     WHERE id = {queueId}
@@ -72,12 +76,12 @@ namespace orderAPI.Repositories
             await tx.CommitAsync();
             return entry;
         }
-
         public async Task<bool> CancelQueueAsync(int queueId)
         {
-            await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
+            await using var tx = await _context.Database
+                .BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
-            var entry = await _context.Queue
+            var entry = await _context.Queues
                 .FromSqlInterpolated($@"
                     SELECT * FROM `Queue`
                     WHERE id = {queueId}
@@ -98,8 +102,7 @@ namespace orderAPI.Repositories
 
         public async Task<List<Queue>> GetAllWaitingQueueEntriesAsync(int outletId)
         {
-            // 纯查询，无需锁
-            return await _context.Queue
+            return await _context.Queues
                 .Where(q => q.OutletId == outletId && q.Status == "Waiting")
                 .OrderBy(q => q.QueuePosition)
                 .ToListAsync();
@@ -107,10 +110,10 @@ namespace orderAPI.Repositories
 
         public async Task<bool> NotifyNextCustomerAsync(int outletId)
         {
-            await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
+            await using var tx = await _context.Database
+                .BeginTransactionAsync(System.Data.IsolationLevel.RepeatableRead);
 
-            // 锁定最先加入的 Waiting 记录
-            var next = await _context.Queue
+            var next = await _context.Queues
                 .FromSqlInterpolated($@"
                     SELECT * FROM `Queue`
                     WHERE outlet_id = {outletId}

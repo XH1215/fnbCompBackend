@@ -22,7 +22,7 @@ namespace orderAPI.Controllers
         /// 创建预约
         /// </summary>
         [HttpPost("create")]
-        public async Task<ActionResult<CreateReservationResult>> Create([FromBody] ReservationCreateRequest req)
+        public async Task<ActionResult<CreateReservationResult>> Create([FromBody] CreateReservationRequest req)
         {
             var result = await _reservationService.CreateReservationAsync(req);
             if (!result.Success) return BadRequest(result);
@@ -33,7 +33,7 @@ namespace orderAPI.Controllers
         /// 查询用户所有预约
         /// </summary>
         [HttpPost("get")]
-        public async Task<ActionResult<GetReservationsResult>> Get([FromBody] ReservationGetRequest req)
+        public async Task<ActionResult<GetReservationsResult>> Get([FromBody] GetReservationsByContactRequest req)
         {
             var result = await _reservationService.GetReservationsAsync(req);
             if (!result.Success) return BadRequest(result);
@@ -44,7 +44,7 @@ namespace orderAPI.Controllers
         /// 更新预约
         /// </summary>
         [HttpPost("update")]
-        public async Task<ActionResult<UpdateReservationResult>> Update([FromBody] ReservationUpdateRequest req)
+        public async Task<ActionResult<UpdateReservationResult>> Update([FromBody] UpdateReservationRequest req)
         {
             var result = await _reservationService.UpdateReservationAsync(req);
             if (!result.Success) return NotFound(result);
@@ -55,7 +55,7 @@ namespace orderAPI.Controllers
         /// 取消预约
         /// </summary>
         [HttpPost("cancel")]
-        public async Task<ActionResult<CancelReservationResult>> Cancel([FromBody] ReservationCancelRequest req)
+        public async Task<ActionResult<CancelReservationResult>> Cancel([FromBody] CancelReservationRequest req)
         {
             var result = await _reservationService.CancelReservationAsync(req);
             if (!result.Success) return NotFound(result);

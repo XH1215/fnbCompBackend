@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace orderAPI.Services
 {
+    /// <summary>
+    /// Implementation of queue operations
+    /// </summary>
     public class QueueService : IQueueService
     {
         private readonly IQueueRepository _repo;
@@ -17,44 +20,53 @@ namespace orderAPI.Services
             _repo = repo;
         }
 
-        public async Task<JoinQueueResult> JoinQueueAsync(QueueCreateRequest req)
+        public async Task<JoinQueueResult> JoinQueueAsync(JoinQueueRequest req)
         {
-            // 入参校验
-            if (string.IsNullOrWhiteSpace(req.CustomerPhone))
-                return new JoinQueueResult(false, "ContactNumber is required", 0, 0);
+            if (string.IsNullOrWhiteSpace(req.ContactNumber))
+                return new JoinQueueResult(false, "ContactNumber is required");
 
             if (req.OutletId <= 0)
-                return new JoinQueueResult(false, "OutletId must be greater than zero", 0, 0);
+                return new JoinQueueResult(false, "OutletId must be greater than zero");
 
             if (req.NumberOfGuests <= 0)
-                return new JoinQueueResult(false, "NumberOfGuests must be at least 1", 0, 0);
+                return new JoinQueueResult(false, "NumberOfGuests must be at least 1");
 
             try
             {
-                var entry = await _repo.JoinQueueAsync(req.CustomerPhone, req.OutletId, req.NumberOfGuests, req.SpecialRequests);
-                return new JoinQueueResult(true, "Joined queue successfully", entry.Id, entry.QueuePosition);
+                var entry = await _repo.JoinQueueAsync(
+                    req.ContactNumber,
+                    req.OutletId,
+                    req.NumberOfGuests,
+                    req.SpecialRequests);
+
+                return new JoinQueueResult(true, "Joined queue successfully", entry);
             }
             catch (Exception ex)
             {
-                return new JoinQueueResult(false, $"Failed to join queue: {ex.Message}", 0, 0);
+                return new JoinQueueResult(false, $"Failed to join queue: {ex.Message}");
             }
         }
 
-        public async Task<GetQueueStatusResult> GetQueueStatusAsync(QueueStatusRequest req)
+        public async Task<UpdateQueueResult> UpdateQueueAsync(UpdateQueueRequest req)
         {
-            if (string.IsNullOrWhiteSpace(req.CustomerPhone))
-                return new GetQueueStatusResult(false, "ContactNumber is required", null);
+            if (req.QueueId <= 0)
+                return new UpdateQueueResult(false, "QueueId is invalid");
 
-            if (req.OutletId <= 0)
-                return new GetQueueStatusResult(false, "OutletId must be greater than zero", null);
+            try
+            {
+                var entry = await _repo.UpdateQueueAsync(
+                    req.QueueId,
+                    req.SpecialRequests);
 
-            var entry = await _repo.GetQueueStatusAsync(req.CustomerPhone, req.OutletId);
-            if (entry == null)
-                return new GetQueueStatusResult(false, "No waiting queue found", null);
+                if (entry == null)
+                    return new UpdateQueueResult(false, "Queue entry not found");
 
-            return new GetQueueStatusResult(true,
-                "Queue status retrieved",
-                entry);
+                return new UpdateQueueResult(true, "Queue updated successfully", entry);
+            }
+            catch (Exception ex)
+            {
+                return new UpdateQueueResult(false, $"Failed to update queue: {ex.Message}");
+            }
         }
 
         public async Task<CancelQueueResult> CancelQueueAsync(QueueCancelRequest req)
@@ -71,12 +83,10 @@ namespace orderAPI.Services
         public async Task<GetAllWaitingQueueEntriesResult> GetAllWaitingQueueEntriesAsync(AllWaitingQueueRequest req)
         {
             if (req.OutletId <= 0)
-                return new GetAllWaitingQueueEntriesResult(false, "OutletId must be greater than zero", null);
+                return new GetAllWaitingQueueEntriesResult(false, "OutletId must be greater than zero");
 
             var list = await _repo.GetAllWaitingQueueEntriesAsync(req.OutletId);
-            return new GetAllWaitingQueueEntriesResult(true,
-                $"Found {list.Count} waiting entries",
-                list);
+            return new GetAllWaitingQueueEntriesResult(true, $"Found {list.Count} waiting entries", list);
         }
 
         public async Task<NotifyNextCustomerResult> NotifyNextCustomerAsync(NotifyNextCustomerRequest req)
